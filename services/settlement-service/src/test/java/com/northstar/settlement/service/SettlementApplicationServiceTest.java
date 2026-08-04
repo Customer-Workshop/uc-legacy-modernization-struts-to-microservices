@@ -13,6 +13,7 @@ import com.northstar.settlement.repository.PaymentRepository;
 import com.northstar.settlement.repository.PolicyRepository;
 import com.northstar.settlement.repository.SettlementRepository;
 import java.util.Optional;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 
 class SettlementApplicationServiceTest {
@@ -25,7 +26,7 @@ class SettlementApplicationServiceTest {
             mock(SettlementRepository.class),
             mock(PaymentRepository.class),
             mock(SettlementCalculator.class),
-            mock(javax.sql.DataSource.class));
+            mock(DataSource.class));
     assertThat(service.integer(null, 119)).isEqualTo(119);
     assertThat(service.integer("bad", 119)).isEqualTo(119);
     assertThat(service.decimal(null, 5000)).isEqualTo(5000);
