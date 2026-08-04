@@ -1,0 +1,38 @@
+modules:
+  policy: extracted
+  intake: extracted
+  settlement: pending
+  workbench: pending
+  reporting: pending
+routes:
+  "/claims/login.do":
+    module: policy
+    service: policy
+    method: POST
+    url: /api/auth/login
+    body: {username: username, password: password}
+  "/claims/policy/search.do":
+    module: policy
+    service: policy
+    method: GET
+    url: /api/policies
+    query: {lineOfBusiness: lineOfBusiness}
+  "/claims/policy/view.do":
+    module: policy
+    service: policy
+    method: GET
+    url: /api/policies/{policyId}
+    query: {policyId: policyId}
+  "/claims/intake/submit.do":
+    module: intake
+    service: intake
+    method: POST
+    url: /api/claims
+    body: {claimantName: claimantName, description: description, lossDate: lossDate, lossType: lossType}
+probes:
+  policy:
+    service: policy
+    url: /api/policies/{id}
+  claim:
+    service: intake
+    url: /api/claims/{id}
