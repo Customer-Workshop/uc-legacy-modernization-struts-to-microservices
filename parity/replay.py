@@ -250,7 +250,12 @@ def write_report(results: list[Result], summary: str) -> None:
     report = {
         "results": [result.__dict__ for result in results],
         "summary": {
-            status: sum(result.status == status for result in results)
+            status: sum(
+                result.status == status
+                if status != "SKIP"
+                else result.status.startswith("SKIP")
+                for result in results
+            )
             for status in ("PASS", "FAIL", "SKIP")
         },
     }
