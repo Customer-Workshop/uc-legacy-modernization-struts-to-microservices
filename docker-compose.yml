@@ -8,7 +8,10 @@ services:
     ports: ["${POSTGRES_PORT:-5432}:5432"]
     volumes: ["claims-data:/var/lib/postgresql/data"]
   policy-service:
-    build: ./services/policy-service
+    build:
+      context: ./services/policy-service
+      args:
+        MAVEN_MIRROR: ${MAVEN_MIRROR:-https://repo.maven.apache.org/maven2}
     environment:
       PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/claims_${NS:-dev}?currentSchema=policy
@@ -19,7 +22,10 @@ services:
     ports: ["${POLICY_PORT:-8081}:8081"]
     depends_on: [postgres]
   claims-intake-service:
-    build: ./services/claims-intake-service
+    build:
+      context: ./services/claims-intake-service
+      args:
+        MAVEN_MIRROR: ${MAVEN_MIRROR:-https://repo.maven.apache.org/maven2}
     environment:
       PORT: 8082
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/claims_${NS:-dev}?currentSchema=intake

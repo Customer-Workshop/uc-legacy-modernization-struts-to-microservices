@@ -21,9 +21,9 @@ lint:
 	cd services/claims-intake-service && $(MVN) $(MAVEN_FLAGS) -q spotless:check
 	ruff check parity
 sast:
-	semgrep --config p/java --config p/python services parity
+	semgrep --error --config p/java --config p/python services parity
 sync-transcripts:
-	@set -eu; ref=$${LEGACY_REF:-main}; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; git clone --no-checkout "$${LEGACY_REPO:-../ts-java-struts-claims-management}" "$$tmp/legacy"; git -C "$$tmp/legacy" fetch origin "$$ref"; git -C "$$tmp/legacy" checkout FETCH_HEAD; cp "$$tmp/legacy"/transcripts/*.json "$$tmp/legacy"/transcripts/README.md transcripts/; git -C "$$tmp/legacy" rev-parse HEAD > transcripts/SOURCE_SHA
+	@set -eu; ref=$${LEGACY_REF:-main}; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; git clone --no-checkout "$${LEGACY_REPO:-https://github.com/Cognition-Partner-Workshops/ts-java-struts-claims-management.git}" "$$tmp/legacy"; git -C "$$tmp/legacy" fetch origin "$$ref"; git -C "$$tmp/legacy" checkout FETCH_HEAD; cp "$$tmp/legacy"/transcripts/*.json "$$tmp/legacy"/transcripts/README.md transcripts/; git -C "$$tmp/legacy" rev-parse HEAD > transcripts/SOURCE_SHA
 build:
 	cd services/policy-service && $(MVN) $(MAVEN_FLAGS) -q package -DskipTests
 	cd services/claims-intake-service && $(MVN) $(MAVEN_FLAGS) -q package -DskipTests

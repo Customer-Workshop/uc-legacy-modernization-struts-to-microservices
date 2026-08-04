@@ -11,28 +11,59 @@ routes:
     method: POST
     url: /api/auth/login
     body: {username: username, password: password}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: signedInUser, from: /signedInUser, normalize: text}
   "/claims/policy/search.do":
     module: policy
     service: policy
     method: GET
     url: /api/policies
     query: {lineOfBusiness: lineOfBusiness}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - foreach:
+          from: /
+          item_key: policyId
+          field: policyLimit_{policyId}
+          value_from: /policyLimit
+          normalize: money
   "/claims/policy/view.do":
     module: policy
     service: policy
     method: GET
     url: /api/policies/{policyId}
     query: {policyId: policyId}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: policyLimit, from: /policyLimit, normalize: money}
+      - {field: deductibleApplied, from: /deductible, normalize: money}
+      - {field: policyStatus, from: /status, normalize: text}
   "/claims/intake/submit.do":
     module: intake
     service: intake
     method: POST
     url: /api/claims
     body: {claimantName: claimantName, description: description, lossDate: lossDate, lossType: lossType}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: claimId, from: /claimId, normalize: integer}
+      - {field: claimStatus, from: /claimStatus, normalize: text}
 probes:
   policy:
     service: policy
     url: /api/policies/{id}
+    fields:
+      limit: {from: /policyLimit, normalize: money}
+      status: {from: /status, normalize: text}
   claim:
     service: intake
     url: /api/claims/{id}
+    fields:
+      loss_date: {from: /lossDate, normalize: text}
+      status: {from: /status, normalize: text}
+      exists: {exists: true}
