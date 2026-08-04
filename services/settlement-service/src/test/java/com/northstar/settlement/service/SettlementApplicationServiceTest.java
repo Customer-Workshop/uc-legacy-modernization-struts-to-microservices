@@ -19,7 +19,13 @@ class SettlementApplicationServiceTest {
   @Test
   void integerAndDecimalFallbacksMatchLegacyActions() {
     SettlementApplicationService service =
-        new SettlementApplicationService(null, null, null, null, null, null);
+        new SettlementApplicationService(
+            mock(ClaimRepository.class),
+            mock(PolicyRepository.class),
+            mock(SettlementRepository.class),
+            mock(PaymentRepository.class),
+            mock(SettlementCalculator.class),
+            mock(javax.sql.DataSource.class));
     assertThat(service.integer(null, 119)).isEqualTo(119);
     assertThat(service.integer("bad", 119)).isEqualTo(119);
     assertThat(service.decimal(null, 5000)).isEqualTo(5000);

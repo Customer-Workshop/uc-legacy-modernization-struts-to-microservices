@@ -1,5 +1,3 @@
-CREATE SCHEMA IF NOT EXISTS settlement;
-
 CREATE TABLE policy (
  policy_id INTEGER PRIMARY KEY, policy_number VARCHAR(30) NOT NULL UNIQUE,
  line_of_business VARCHAR(40) NOT NULL, insured_name VARCHAR(100) NOT NULL,

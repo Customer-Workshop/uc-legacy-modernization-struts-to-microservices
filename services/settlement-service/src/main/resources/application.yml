@@ -9,5 +9,4 @@ spring:
     hibernate.ddl-auto: validate
   flyway:
     enabled: true
-    create-schemas: true
 management.endpoints.web.exposure.include: health,info

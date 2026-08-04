@@ -1,15 +1,3 @@
-Settlement extraction preserves the following legacy quirks:
-
-- `SettlementCalculator.java`: depreciation precedes deductible subtraction;
-  negative post-deductible values floor at zero, then strict `>` policy capping
-  occurs, and Java `double` `Math.round` runs last.
-- `ClaimsActionSupport.java`: malformed integer/decimal inputs use
-  action-specific fallbacks (119, 5000, and 0).
-- `PaymentIssueAction.java`: malformed payment amounts fall back to the
-  latest settlement amount, payment methods are stored verbatim, and checks
-  use `CHK-<id>`.
-- `SettlementSaveAction.java`: the session operator fallback is `supervisor`
-  and the calculated date is fixed at 2019-04-01.
 # Known legacy quirks
 
 These behaviors are intentionally preserved from the legacy source.
@@ -23,3 +11,8 @@ These behaviors are intentionally preserved from the legacy source.
 * `FieldTag` renders money with two decimal places (`FieldTag.java:789-800`).
 * Empty policy line defaults to `AUTO` (`PolicySearchAction.java:20-23`).
 * Invalid policy IDs fall back to policy 1 (`PolicyViewAction.java:20-22`).
+* Settlement arithmetic subtracts depreciation before deductible, floors before capping, uses strict `>` for the cap, and rounds Java `double` values last (`SettlementCalculator.java:24-43`).
+* Blank settlement deductibles become zero (`SettlementCalculateAction.java:34-37`, `SettlementSaveAction.java:29-33`).
+* Calculate alone defaults a missing claim or policy limit to `10000`; save dereferences the claim and policy without that fallback (`SettlementCalculateAction.java:23-31`, `SettlementSaveAction.java:24-33`).
+* Payment amount parsing falls back to the latest settlement amount, payment methods are stored verbatim, and issued checks use `CHK-<id>` (`PaymentIssueAction.java:22-35`).
+* Settlement save uses the session operator and fixed date `2019-04-01` (`SettlementSaveAction.java:34-38`).

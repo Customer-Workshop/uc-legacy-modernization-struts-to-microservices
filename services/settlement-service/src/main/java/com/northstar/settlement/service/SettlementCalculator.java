@@ -29,8 +29,4 @@ public class SettlementCalculator {
     return new CalculatedSettlement(
         claimId, coveredAmount, deductibleValue, depreciation, capped, rounded, policyLimit);
   }
-
-  public double round(double amount) {
-    return Math.round(amount * 100.0) / 100.0;
-  }
 }

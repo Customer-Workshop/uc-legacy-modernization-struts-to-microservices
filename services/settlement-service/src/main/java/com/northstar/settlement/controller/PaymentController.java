@@ -4,6 +4,7 @@ import com.northstar.settlement.dto.PaymentIssueRequest;
 import com.northstar.settlement.dto.PaymentListResponse;
 import com.northstar.settlement.dto.PaymentResponse;
 import com.northstar.settlement.dto.RemittanceResponse;
+import com.northstar.settlement.model.Payment;
 import com.northstar.settlement.service.SettlementApplicationService;
 import java.util.List;
 import java.util.Map;
@@ -37,18 +38,18 @@ public class PaymentController {
   @GetMapping("/remittance")
   public RemittanceResponse remittance(@RequestParam(required = false) String claimId) {
     int id = service.integer(claimId, 119);
-    List<com.northstar.settlement.model.Payment> values = service.remittance(claimId);
-    return RemittanceResponse.from(id, values, service.paymentTotal(claimId));
+    List<Payment> values = service.remittance(id);
+    return RemittanceResponse.from(id, values, service.paymentTotal(id));
   }
 
   @GetMapping
   public PaymentListResponse history(@RequestParam(required = false) String claimId) {
     int id = service.integer(claimId, 119);
-    return PaymentListResponse.from(id, service.paymentHistory(claimId));
+    return PaymentListResponse.from(id, service.paymentHistory(id));
   }
 
   @GetMapping("/{id}")
-  public PaymentResponse detail(@PathVariable int id) {
-    return PaymentResponse.from(service.paymentDetail(id));
+  public PaymentResponse detail(@PathVariable String id) {
+    return PaymentResponse.from(service.paymentDetail(service.integer(id, 61)));
   }
 }

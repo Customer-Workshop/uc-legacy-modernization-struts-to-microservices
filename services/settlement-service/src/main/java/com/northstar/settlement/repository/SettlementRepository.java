@@ -12,5 +12,5 @@ public interface SettlementRepository extends JpaRepository<Settlement, Integer>
 
   Optional<Settlement> findFirstByClaimIdOrderBySettlementIdDesc(Integer claimId);
 
-  List<Settlement> findAllByOrderBySettlementIdAsc();
+  List<Settlement> findAllByOrderBySettlementIdDesc();
 }

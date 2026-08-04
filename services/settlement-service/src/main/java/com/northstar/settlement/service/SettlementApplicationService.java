@@ -2,6 +2,7 @@ package com.northstar.settlement.service;
 
 import com.northstar.settlement.dto.PaymentIssueRequest;
 import com.northstar.settlement.dto.SettlementCalculateRequest;
+import com.northstar.settlement.dto.SettlementClaimSummary;
 import com.northstar.settlement.dto.SettlementSaveRequest;
 import com.northstar.settlement.exception.NotFoundException;
 import com.northstar.settlement.model.Payment;
@@ -11,7 +12,6 @@ import com.northstar.settlement.repository.ClaimRepository;
 import com.northstar.settlement.repository.PaymentRepository;
 import com.northstar.settlement.repository.PolicyRepository;
 import com.northstar.settlement.repository.SettlementRepository;
-import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +20,7 @@ import javax.sql.DataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SettlementApplicationService {
@@ -74,7 +75,7 @@ public class SettlementApplicationService {
   @Transactional
   public Settlement save(SettlementSaveRequest request) {
     int claimId = integer(request.claimId(), 119);
-    double limit = policyLimitForCalculation(claimId);
+    double limit = policyLimitForSave(claimId);
     double covered = decimal(request.coveredAmount(), 5000);
     double depreciation = decimal(request.depreciation(), 0);
     CalculatedSettlement calculated =
@@ -126,32 +127,32 @@ public class SettlementApplicationService {
   }
 
   public Settlement detail(int claimId) {
-    return latestSettlement(integer(String.valueOf(claimId), 119));
+    return latestSettlement(claimId);
   }
 
-  public List<Payment> paymentHistory(String claimId) {
-    return payments.findByClaimIdOrderByPaymentIdAsc(integer(claimId, 119));
+  public List<Payment> paymentHistory(int claimId) {
+    return payments.findByClaimIdOrderByPaymentIdAsc(claimId);
   }
 
-  public List<Payment> remittance(String claimId) {
+  public List<Payment> remittance(int claimId) {
     return paymentHistory(claimId);
   }
 
   public Payment paymentDetail(int paymentId) {
     return payments
-        .findById(integer(String.valueOf(paymentId), 61))
+        .findById(paymentId)
         .orElseThrow(() -> new NotFoundException("payment.notFound"));
   }
 
-  public Map<String, Map<String, Object>> settlementClaims() {
-    Map<String, Map<String, Object>> result = new LinkedHashMap<>();
-    for (Settlement settlement : settlements.findAllByOrderBySettlementIdAsc()) {
-      result.put(
+  public Map<String, SettlementClaimSummary> settlementClaims() {
+    Map<String, SettlementClaimSummary> result = new LinkedHashMap<>();
+    for (Settlement settlement : settlements.findAllByOrderBySettlementIdDesc()) {
+      result.putIfAbsent(
           String.valueOf(settlement.getClaimId()),
-          Map.of(
-              "amount", settlement.getSettlementAmount(),
-              "settlementId", settlement.getSettlementId(),
-              "savedBy", settlement.getCalculatedBy()));
+          new SettlementClaimSummary(
+              settlement.getSettlementAmount(),
+              settlement.getSettlementId(),
+              settlement.getCalculatedBy()));
     }
     return result;
   }
@@ -164,8 +165,8 @@ public class SettlementApplicationService {
     return Map.of("claim", result);
   }
 
-  public double paymentTotal(String claimId) {
-    return payments.totalIssued(integer(claimId, 119));
+  public double paymentTotal(int claimId) {
+    return payments.totalIssued(claimId);
   }
 
   @Transactional
@@ -185,5 +186,18 @@ public class SettlementApplicationService {
         .map(Policy::getPolicyLimit)
         .map(Number::doubleValue)
         .orElse(10000.0);
+  }
+
+  private double policyLimitForSave(int claimId) {
+    int policyId =
+        claims
+            .findById(claimId)
+            .orElseThrow(() -> new NotFoundException("claim.notFound"))
+            .getPolicyId();
+    return policies
+        .findById(policyId)
+        .map(Policy::getPolicyLimit)
+        .map(Number::doubleValue)
+        .orElseThrow(() -> new NotFoundException("policy.notFound"));
   }
 }
