@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import javax.sql.DataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -77,6 +78,7 @@ public class ClaimApplicationService {
       return LocalDate.of(2019, 4, 1);
     }
     SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+    format.setTimeZone(TimeZone.getTimeZone("UTC"));
     format.setLenient(true);
     Date parsed = format.parse(source, new ParsePosition(0));
     if (parsed == null) return LocalDate.of(2019, 4, 1);
