@@ -1,6 +1,6 @@
 # Struts to microservices: before state
 
-This repository is the checkpoint before extracting the settlement module. It
+This repository contains extracted policy, intake, and settlement modules. It
 contains policy and FNOL services plus a parity gate over immutable legacy
 transcripts.
 

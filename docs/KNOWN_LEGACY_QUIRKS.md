@@ -1,3 +1,15 @@
+Settlement extraction preserves the following legacy quirks:
+
+- `SettlementCalculator.java`: depreciation precedes deductible subtraction;
+  negative post-deductible values floor at zero, then strict `>` policy capping
+  occurs, and Java `double` `Math.round` runs last.
+- `ClaimsActionSupport.java`: malformed integer/decimal inputs use
+  action-specific fallbacks (119, 5000, and 0).
+- `PaymentIssueAction.java`: malformed payment amounts fall back to the
+  latest settlement amount, payment methods are stored verbatim, and checks
+  use `CHK-<id>`.
+- `SettlementSaveAction.java`: the session operator fallback is `supervisor`
+  and the calculated date is fixed at 2019-04-01.
 # Known legacy quirks
 
 These behaviors are intentionally preserved from the legacy source.

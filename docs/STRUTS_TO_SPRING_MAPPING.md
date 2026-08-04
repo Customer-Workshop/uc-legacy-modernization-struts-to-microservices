@@ -11,7 +11,21 @@
 
 ## Later extraction reference architecture
 
-The reserved settlement service (8083) should use `controller`, `dto`,
+The extracted settlement service (8083) uses `controller`, `dto`,
+Settlement/payment mappings:
+
+| Legacy action | Spring endpoint | Persistence |
+|---|---|---|
+| SettlementCalculateAction | POST `/api/settlements/calculate` | SettlementCalculator + claim/policy |
+| SettlementSaveAction | POST `/api/settlements` | SettlementRepository |
+| SettlementDetailAction | GET `/api/settlements/detail` | SettlementRepository |
+| PaymentIssueAction | POST `/api/payments` | PaymentRepository + latest Settlement |
+| PaymentHistoryAction | GET `/api/payments` | PaymentRepository |
+| PaymentDetailAction | GET `/api/payments/{id}` | PaymentRepository |
+| PaymentRemittanceAction | GET `/api/payments/remittance` | PaymentRepository |
+
+The legacy `SettlementService.calculateAndSave` was dead code: no in-scope
+Action referenced it, so it was not migrated.
 `service`, `repository`, `model`, `config`, and `exception` packages; constructor
 injection; `@ControllerAdvice`; Flyway `V1__schema.sql` and `V2__seed.sql`;
 and `/internal/reset` plus read endpoints for parity probes. Add its status and
