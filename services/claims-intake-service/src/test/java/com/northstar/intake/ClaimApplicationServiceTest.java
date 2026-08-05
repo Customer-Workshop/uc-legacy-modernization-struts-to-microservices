@@ -21,6 +21,27 @@ class ClaimApplicationServiceTest {
   }
 
   @Test
+  void reserveRendersTwoDecimalsWithHalfUpRounding() {
+    var claim =
+        new com.northstar.intake.model.Claim(
+            121,
+            "CLM-00121",
+            9001,
+            "Claimant 121",
+            LocalDate.of(2019, 4, 1),
+            LocalDate.of(2019, 4, 1),
+            "WATER",
+            "desc",
+            "OPEN",
+            new java.math.BigDecimal("1234.5670"),
+            "adjuster1",
+            "supervisor",
+            LocalDate.of(2019, 4, 1));
+    assertThat(com.northstar.intake.dto.ClaimResponse.from(claim).reserveAmount())
+        .isEqualTo("1234.57");
+  }
+
+  @Test
   void lenientDateRollsFebruaryForward() {
     var service = new ClaimApplicationService(mock(ClaimRepository.class), mock(DataSource.class));
     var date = service.normalizedDateForTest("02/30/2019");

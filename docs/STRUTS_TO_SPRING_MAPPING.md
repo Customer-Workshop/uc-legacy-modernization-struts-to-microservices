@@ -18,6 +18,8 @@
 * The string-concatenated `update CLAIM set ...` statements become parameterized Spring Data `@Modifying` queries (the sanctioned injection fix; observably identical).
 * The workbench service shares the `intake` schema (same `claim` table) because legacy workbench actions mutate claims created by FNOL; it runs with Flyway disabled and relies on the intake service's migrations. Cross-service data ownership is a follow-up architectural decision.
 * `GET /api/workbench/claims/{id}` plus `/internal/reset` support parity probes and deterministic reseeding.
+* Deliberate change: both `ClaimResponse` renderers now use `setScale(2, RoundingMode.HALF_UP)` instead of `setScale(2)`. Workbench can persist sub-cent reserves (legacy `double` write into `DECIMAL(19,4)`), and the bare `setScale(2)` would throw (HTTP 500) on read; HALF_UP matches the legacy `FieldTag`/`String.format("%.2f")` money rendering. Pinned by `reserveRendersTwoDecimalsWithHalfUpRounding` tests in both services.
+* Known limitation: workbench transcripts mutate claim 121, which is created by the intake `fnol_submit` transcript; every parity run resets all services back to seed claims 1-120. So `make parity MODULE=workbench` (or a single workbench `SCENARIO=`) fails on the `claim.121.*` probes by construction — run the full suite for workbench. Seeding 121 in reset would shift `fnol_submit`'s allocated id and break intake; declarative cross-scenario prerequisites in the harness are a separate decision.
 
 ## Later extraction reference architecture
 
