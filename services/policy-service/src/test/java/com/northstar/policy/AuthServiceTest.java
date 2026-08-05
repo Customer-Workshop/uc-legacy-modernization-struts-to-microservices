@@ -10,4 +10,14 @@ class AuthServiceTest {
   void preservesPrefixMatchingAdjusterAuthentication() {
     assertThat(new AuthService().authenticate("adjuster-anything", "legacy-password")).isTrue();
   }
+
+  @Test
+  void loginRequiresExactSupervisorCredentialsOrAdjusterPrefixes() {
+    AuthService service = new AuthService();
+    assertThat(service.authenticate("supervisor", "supervisor")).isTrue();
+    assertThat(service.authenticate("supervisor", "legacy-password")).isFalse();
+    assertThat(service.authenticate("adjuster9", "legacy9")).isTrue();
+    assertThat(service.authenticate("clerk", "legacy-password")).isFalse();
+    assertThat(service.authenticate("adjuster1", "wrong")).isFalse();
+  }
 }
