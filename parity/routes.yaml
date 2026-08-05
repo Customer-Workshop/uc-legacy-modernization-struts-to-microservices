@@ -1,3 +1,7 @@
+services:
+  policy: {port: 8081, env: BASE_URL_POLICY}
+  intake: {port: 8082, env: BASE_URL_INTAKE}
+  reporting: {port: 8085, env: BASE_URL_REPORTING}
 modules:
   policy: extracted
   intake: extracted

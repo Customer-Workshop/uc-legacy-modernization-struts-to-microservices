@@ -147,6 +147,28 @@ def check_probes(
     return ""
 
 
+def service_bases(spec: dict[str, object], overrides: list[str]) -> dict[str, str]:
+    services = cast(dict[str, dict[str, object]], spec.get("services", {}))
+    bases: dict[str, str] = {}
+    for name, definition in services.items():
+        default = f"http://localhost:{definition['port']}"
+        bases[name] = os.getenv(str(definition.get("env", "")) or "", "") or default
+    for override in overrides:
+        name, _, url = override.partition("=")
+        if not url:
+            raise RuntimeError(f"--base-url must be service=url, got: {override}")
+        if name not in bases:
+            raise RuntimeError(f"--base-url names unknown service {name}; declare it in routes.yaml")
+        bases[name] = url
+    for route_path, route in cast(dict[str, dict[str, object]], spec["routes"]).items():
+        if str(route["service"]) not in bases:
+            raise RuntimeError(
+                f"route {route_path} references service {route['service']} "
+                "with no services entry in routes.yaml"
+            )
+    return {name: base.rstrip("/") for name, base in bases.items()}
+
+
 def run(args: argparse.Namespace) -> list[Result]:
     spec = cast(dict[str, object], yaml.safe_load((ROOT / "parity/routes.yaml").read_text()))
     index = cast(list[dict[str, str]], json.loads((ROOT / "transcripts/index.json").read_text()))
@@ -156,11 +178,7 @@ def run(args: argparse.Namespace) -> list[Result]:
         if (not args.module or entry["module"] == args.module)
         and (not args.scenario or entry["scenario"] == args.scenario)
     ]
-    bases = {
-        "policy": args.base_url_policy.rstrip("/"),
-        "intake": args.base_url_intake.rstrip("/"),
-        "reporting": args.base_url_reporting.rstrip("/"),
-    }
+    bases = service_bases(spec, args.base_url)
     reset_services(spec, bases)
     modules = cast(dict[str, str], spec["modules"])
     routes = cast(dict[str, dict[str, object]], spec["routes"])
@@ -271,10 +289,12 @@ def write_report(results: list[Result], summary: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url-policy", default=os.getenv("BASE_URL_POLICY", "http://localhost:8081"))
-    parser.add_argument("--base-url-intake", default=os.getenv("BASE_URL_INTAKE", "http://localhost:8082"))
     parser.add_argument(
-        "--base-url-reporting", default=os.getenv("BASE_URL_REPORTING", "http://localhost:8085")
+        "--base-url",
+        action="append",
+        default=[],
+        metavar="SERVICE=URL",
+        help="override a service base URL declared in routes.yaml",
     )
     parser.add_argument("--module")
     parser.add_argument("--scenario")
