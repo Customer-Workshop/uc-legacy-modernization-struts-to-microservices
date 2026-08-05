@@ -1,0 +1,11 @@
+server.port: ${PORT:8084}
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:workbench;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+  flyway.enabled: ${SPRING_FLYWAY_ENABLED:true}
+management.endpoints.web.exposure.include: health,info

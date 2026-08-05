@@ -2,7 +2,7 @@ modules:
   policy: extracted
   intake: extracted
   settlement: pending
-  workbench: pending
+  workbench: extracted
   reporting: pending
 routes:
   "/claims/login.do":
@@ -53,6 +53,36 @@ routes:
     business_fields:
       - {field: claimId, from: /claimId, normalize: integer}
       - {field: claimStatus, from: /claimStatus, normalize: text}
+  "/claims/workbench/assign.do":
+    module: workbench
+    service: workbench
+    method: POST
+    url: /api/workbench/claims/{claimId}/assign
+    body: {adjuster: adjuster}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: assignedAdjuster, from: /assignedAdjuster, normalize: text}
+  "/claims/workbench/status.do":
+    module: workbench
+    service: workbench
+    method: POST
+    url: /api/workbench/claims/{claimId}/status
+    query: {status: status}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: claimStatus, from: /claimStatus, normalize: text}
+  "/claims/workbench/reserve.do":
+    module: workbench
+    service: workbench
+    method: POST
+    url: /api/workbench/claims/{claimId}/reserve
+    body: {reserveAmount: reserveAmount}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: reserveAmount, from: /reserveAmount, normalize: money}
 probes:
   policy:
     service: policy
@@ -66,4 +96,6 @@ probes:
     fields:
       loss_date: {from: /lossDate, normalize: text}
       status: {from: /status, normalize: text}
+      assigned_adjuster: {from: /assignedAdjuster, normalize: text}
+      reserve_amount: {from: /reserveAmount, normalize: money}
       exists: {exists: true}

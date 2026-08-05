@@ -11,3 +11,11 @@ These behaviors are intentionally preserved from the legacy source.
 * `FieldTag` renders money with two decimal places (`FieldTag.java:789-800`).
 * Empty policy line defaults to `AUTO` (`PolicySearchAction.java:20-23`).
 * Invalid policy IDs fall back to policy 1 (`PolicyViewAction.java:20-22`).
+
+## Workbench
+
+* Unparseable or missing `claimId` falls back to claim `119` (`ClaimsActionSupport.integer`, used by all three workbench actions).
+* A blank or missing adjuster silently assigns `adjuster2` (`WorkbenchAssignAction.java:21-23`). The legacy JSP posts the field as `assignedAdjuster` while the Action reads parameter `adjuster`, so browser submissions always hit this default.
+* A blank or missing status silently becomes `INVESTIGATING`, and any provided status string is written without validation or normalization (`WorkbenchStatusAction.java:20-23`).
+* A blank or unparseable reserve amount falls back to `4500`; reserves are parsed with `Double.parseDouble` semantics (`WorkbenchReserveAction.java:20`, `ClaimsActionSupport.decimal`).
+* Workbench mutations on nonexistent claims update zero rows and still forward with HTTP 200 and a null claim (`WorkbenchAssignAction.java:24-31`).

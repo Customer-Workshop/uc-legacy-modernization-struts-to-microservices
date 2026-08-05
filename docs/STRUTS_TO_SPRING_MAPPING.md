@@ -9,6 +9,16 @@
 * `PolicyManager.getInstance()` becomes constructor-injected `@Service`.
 * JSP `FieldTag` semantic output becomes JSON, with money normalized to two decimal places.
 
+## Workbench module
+
+* `WorkbenchAssignAction` (`/workbench/assign.do`) becomes `POST /api/workbench/claims/{claimId}/assign` on the workbench service (8084); the request body carries `adjuster`, matching the parameter the legacy Action actually reads.
+* `WorkbenchStatusAction` (`/workbench/status.do?status=...`) becomes `POST /api/workbench/claims/{claimId}/status?status=...`.
+* `WorkbenchReserveAction` (`/workbench/reserve.do`) becomes `POST /api/workbench/claims/{claimId}/reserve` with `reserveAmount` in the body.
+* `claimId` stays a string path variable so the legacy fallback-to-119 coercion is preserved instead of a framework 400.
+* The string-concatenated `update CLAIM set ...` statements become parameterized Spring Data `@Modifying` queries (the sanctioned injection fix; observably identical).
+* The workbench service shares the `intake` schema (same `claim` table) because legacy workbench actions mutate claims created by FNOL; it runs with Flyway disabled and relies on the intake service's migrations. Cross-service data ownership is a follow-up architectural decision.
+* `GET /api/workbench/claims/{id}` plus `/internal/reset` support parity probes and deterministic reseeding.
+
 ## Later extraction reference architecture
 
 The reserved settlement service (8083) should use `controller`, `dto`,
