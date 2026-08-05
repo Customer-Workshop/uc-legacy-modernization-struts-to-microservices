@@ -9,6 +9,20 @@
 * `PolicyManager.getInstance()` becomes constructor-injected `@Service`.
 * JSP `FieldTag` semantic output becomes JSON, with money normalized to two decimal places.
 
+## Settlement module (settlement-service, 8083)
+
+* `SettlementCalculateAction` (`/claims/settlement/calculate.do`) becomes `POST /api/settlements/calculate`.
+* `SettlementSaveAction` (`/claims/settlement/save.do`) becomes `POST /api/settlements`; `savedBy` carries the legacy `calculatedBy`.
+* `SettlementDetailAction` becomes `GET /api/settlements/detail?claimId=` plus `GET /api/settlements/by-claim` (latest settlement per claim, used by parity probes).
+* `PaymentIssueAction` (`/claims/payment/issue.do`) becomes `POST /api/payments`.
+* `PaymentHistoryAction` (`/claims/payment/history.do`) becomes `GET /api/payments?claimId=`.
+* `PaymentDetailAction` becomes `GET /api/payments/{id}`; `GET /api/payments/count` serves the parity count probe.
+* `PaymentRemittanceAction` becomes `GET /api/payments/remittance?claimId=` (payments, count, and `PaymentDAO.totalIssued` total).
+* `SettlementForm`/`PaymentForm` become String-typed `SettlementRequest`/`PaymentRequest` records; the `ClaimsActionSupport.integer`/`decimal` fallbacks are applied explicitly in `SettlementApplicationService`.
+* `SettlementCalculator.getInstance()` double arithmetic becomes an injected `SettlementCalculator` component that keeps the legacy `Math.round` cent rounding.
+* `SettlementDAO`/`PaymentDAO` JDBC (including `nextId` max+1 allocation) become Spring Data repositories with `coalesce(max(id),0)+1` queries.
+* `SettlementService.calculateAndSave` (operator `supervisor`, date `2019-03-01`) is dead code in the web flow and was not migrated; the actions' own path is authoritative.
+
 ## Later extraction reference architecture
 
 The reserved settlement service (8083) should use `controller`, `dto`,

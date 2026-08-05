@@ -159,6 +159,7 @@ def run(args: argparse.Namespace) -> list[Result]:
     bases = {
         "policy": args.base_url_policy.rstrip("/"),
         "intake": args.base_url_intake.rstrip("/"),
+        "settlement": args.base_url_settlement.rstrip("/"),
     }
     reset_services(spec, bases)
     modules = cast(dict[str, str], spec["modules"])
@@ -272,6 +273,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url-policy", default=os.getenv("BASE_URL_POLICY", "http://localhost:8081"))
     parser.add_argument("--base-url-intake", default=os.getenv("BASE_URL_INTAKE", "http://localhost:8082"))
+    parser.add_argument(
+        "--base-url-settlement",
+        default=os.getenv("BASE_URL_SETTLEMENT", "http://localhost:8083"),
+    )
     parser.add_argument("--module")
     parser.add_argument("--scenario")
     args = parser.parse_args()
