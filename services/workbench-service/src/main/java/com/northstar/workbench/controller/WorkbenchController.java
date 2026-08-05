@@ -48,7 +48,12 @@ public class WorkbenchController {
         service.changeReserve(claimId, request == null ? null : request.reserveAmount());
     Claim claim = service.find(claimId);
     // legacy-faithful: f_reserveAmount echoes the parsed request attribute, not the stored row.
-    return new ReserveResponse(claimId, String.valueOf(reserve), ClaimResponse.from(claim));
+    return new ReserveResponse(
+        claimId,
+        java.math.BigDecimal.valueOf(reserve)
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toPlainString(),
+        ClaimResponse.from(claim));
   }
 
   @GetMapping("/{id}")
