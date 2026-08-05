@@ -35,5 +35,19 @@ services:
       SPRING_FLYWAY_CREATE_SCHEMAS: "true"
     ports: ["${INTAKE_PORT:-8082}:8082"]
     depends_on: [postgres]
+  settlement-service:
+    build:
+      context: ./services/settlement-service
+      args:
+        MAVEN_MIRROR: ${MAVEN_MIRROR:-https://repo.maven.apache.org/maven2}
+    environment:
+      PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/claims_${NS:-dev}?currentSchema=settlement
+      SPRING_DATASOURCE_USERNAME: claims
+      SPRING_DATASOURCE_PASSWORD: claims
+      SPRING_FLYWAY_DEFAULT_SCHEMA: settlement
+      SPRING_FLYWAY_CREATE_SCHEMAS: "true"
+    ports: ["${SETTLEMENT_PORT:-8083}:8083"]
+    depends_on: [postgres]
 volumes:
   claims-data:

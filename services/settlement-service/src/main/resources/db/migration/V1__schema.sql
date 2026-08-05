@@ -1,0 +1,44 @@
+CREATE TABLE policy (
+    policy_id INTEGER NOT NULL,
+    policy_limit DOUBLE PRECISION NOT NULL,
+    CONSTRAINT pk_policy PRIMARY KEY (policy_id)
+);
+
+CREATE TABLE claim (
+    claim_id INTEGER NOT NULL,
+    policy_id INTEGER NOT NULL,
+    CONSTRAINT pk_claim PRIMARY KEY (claim_id),
+    CONSTRAINT fk_claim_policy FOREIGN KEY (policy_id) REFERENCES policy(policy_id)
+);
+
+CREATE TABLE settlement (
+    settlement_id INTEGER NOT NULL,
+    claim_id INTEGER NOT NULL,
+    covered_amount DOUBLE PRECISION NOT NULL,
+    deductible_applied DOUBLE PRECISION NOT NULL,
+    depreciation DOUBLE PRECISION NOT NULL,
+    capped_at_limit BOOLEAN NOT NULL,
+    settlement_amount DOUBLE PRECISION NOT NULL,
+    calculated_by VARCHAR(40) NOT NULL,
+    calculated_date VARCHAR(10) NOT NULL,
+    CONSTRAINT pk_settlement PRIMARY KEY (settlement_id),
+    CONSTRAINT fk_settlement_claim FOREIGN KEY (claim_id) REFERENCES claim(claim_id)
+);
+
+CREATE TABLE payment (
+    payment_id INTEGER NOT NULL,
+    claim_id INTEGER NOT NULL,
+    settlement_id INTEGER NOT NULL,
+    payee_name VARCHAR(100) NOT NULL,
+    amount DOUBLE PRECISION NOT NULL,
+    payment_method VARCHAR(20) NOT NULL,
+    check_number VARCHAR(30) NOT NULL,
+    issued_date VARCHAR(10) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    CONSTRAINT pk_payment PRIMARY KEY (payment_id),
+    CONSTRAINT fk_payment_claim FOREIGN KEY (claim_id) REFERENCES claim(claim_id),
+    CONSTRAINT fk_payment_settlement FOREIGN KEY (settlement_id) REFERENCES settlement(settlement_id)
+);
+
+CREATE INDEX ix_settlement_claim ON settlement(claim_id);
+CREATE INDEX ix_payment_claim ON payment(claim_id);

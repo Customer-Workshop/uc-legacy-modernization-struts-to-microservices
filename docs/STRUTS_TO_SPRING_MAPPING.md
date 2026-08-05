@@ -9,6 +9,21 @@
 * `PolicyManager.getInstance()` becomes constructor-injected `@Service`.
 * JSP `FieldTag` semantic output becomes JSON, with money normalized to two decimal places.
 
+## Settlement module
+
+* `SettlementCalculateAction` (`/settlement/calculate.do`) becomes `POST /api/settlements/calculate`.
+* `SettlementSaveAction` (`/settlement/save.do`) becomes `POST /api/settlements`.
+* `PaymentIssueAction` (`/payment/issue.do`) becomes `POST /api/payments`.
+* `PaymentHistoryAction` (`/payment/history.do`) becomes `GET /api/payments?claimId=`.
+* `SettlementForm`/`PaymentForm` become String-typed request records so the legacy
+  parameter coercions (`LegacyCoercions`) stay explicit.
+* `SettlementCalculator.getInstance()` becomes a constructor-injected `@Component`
+  preserving the legacy `double`/`Math.round` arithmetic.
+* `SettlementDAO`/`PaymentDAO` JDBC become Spring Data repositories; `nextId`
+  keeps the `coalesce(max(id),0)+1` allocation.
+* Parity DB probes read `GET /api/settlements/by-claim`, `GET /api/payments/{id}`,
+  and `GET /api/payments/count`.
+
 ## Later extraction reference architecture
 
 The reserved settlement service (8083) should use `controller`, `dto`,
