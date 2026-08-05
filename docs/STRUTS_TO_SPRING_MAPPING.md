@@ -11,9 +11,24 @@
 
 ## Later extraction reference architecture
 
-The reserved settlement service (8083) should use `controller`, `dto`,
-`service`, `repository`, `model`, `config`, and `exception` packages; constructor
-injection; `@ControllerAdvice`; Flyway `V1__schema.sql` and `V2__seed.sql`;
-and `/internal/reset` plus read endpoints for parity probes. Add its status and
-routes/probes to `parity/routes.yaml` only; no harness Python changes should be
-needed.
+Extracted services use `controller`, `dto`, `service`, `repository`, `model`,
+and `exception` packages; constructor injection; `@ControllerAdvice`; Flyway
+`V1__schema.sql` and `V2__seed.sql`; and `/internal/reset` plus read endpoints
+for parity probes. Add each module's status and routes/probes to
+`parity/routes.yaml`; no scenario-specific harness Python changes are needed.
+
+## Settlement module mapping
+
+| Legacy | Spring |
+|---|---|
+| `SettlementCalculateAction` (`/settlement/calculate.do`) | `POST /api/settlements/calculate` (`SettlementController.calculate`) |
+| `SettlementSaveAction` (`/settlement/save.do`) | `POST /api/settlements` (`SettlementController.save`) |
+| `PaymentIssueAction` (`/payment/issue.do`) | `POST /api/payments` (`PaymentController.issue`) |
+| `PaymentHistoryAction` (`/payment/history.do`) | `GET /api/payments?claimId=` (`PaymentController.history`) |
+| `SettlementCalculator` (double + `Math.round`) | `LegacySettlementCalculator` (arithmetic preserved) |
+| `SettlementDAO` / `PaymentDAO` JDBC | `SettlementRepository` / `PaymentRepository` Spring Data queries |
+| `ClaimsActionSupport.integer`/`decimal` fallbacks | explicit coercions in `SettlementApplicationService` |
+| Request-parameter form population | String-typed JSON DTO records (`SettlementRequest`, `PaymentRequest`) |
+
+Parity probes read `GET /api/settlements/latest-by-claim`, `GET /api/payments/{id}`,
+and `GET /api/payments/count`; `POST /internal/reset` restores the deterministic seed.

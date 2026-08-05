@@ -1,7 +1,7 @@
 modules:
   policy: extracted
   intake: extracted
-  settlement: pending
+  settlement: extracted
   workbench: pending
   reporting: pending
 routes:
@@ -53,6 +53,70 @@ routes:
     business_fields:
       - {field: claimId, from: /claimId, normalize: integer}
       - {field: claimStatus, from: /claimStatus, normalize: text}
+  "/claims/settlement/calculate.do":
+    module: settlement
+    service: settlement
+    method: POST
+    url: /api/settlements/calculate
+    body: {claimId: claimId, coveredAmount: coveredAmount, deductible: deductible, depreciation: depreciation}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: coveredAmount, from: /coveredAmount, normalize: money}
+      - {field: deductibleApplied, from: /deductibleApplied, normalize: money}
+      - {field: depreciation, from: /depreciation, normalize: money}
+      - {field: cappedAtLimit, from: /cappedAtLimit, normalize: text}
+      - {field: settlementAmount, from: /settlementAmount, normalize: money}
+  "/claims/settlement/save.do":
+    module: settlement
+    service: settlement
+    method: POST
+    url: /api/settlements
+    body: {claimId: claimId, coveredAmount: coveredAmount, deductible: deductible, depreciation: depreciation}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: savedBy, from: /savedBy, normalize: text}
+      - {field: settlementAmount, from: /settlementAmount, normalize: money}
+  "/claims/payment/issue.do":
+    module: settlement
+    service: settlement
+    method: POST
+    url: /api/payments
+    body: {claimId: claimId, payeeName: payeeName, amount: amount, paymentMethod: paymentMethod}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - {field: checkNumber, from: /checkNumber, normalize: text}
+      - {field: paymentAmount, from: /paymentAmount, normalize: money}
+      - {field: paymentStatus, from: /paymentStatus, normalize: text}
+  "/claims/payment/history.do":
+    module: settlement
+    service: settlement
+    method: GET
+    url: /api/payments
+    query: {claimId: claimId}
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - foreach:
+          from: /payments
+          item_key: paymentId
+          field: checkNumber_{paymentId}
+          value_from: /checkNumber
+          normalize: text
+      - foreach:
+          from: /payments
+          item_key: paymentId
+          field: paymentAmount_{paymentId}
+          value_from: /amount
+          normalize: money
+      - foreach:
+          from: /payments
+          item_key: paymentId
+          field: paymentStatus_{paymentId}
+          value_from: /status
+          normalize: text
 probes:
   policy:
     service: policy
@@ -67,3 +131,17 @@ probes:
       loss_date: {from: /lossDate, normalize: text}
       status: {from: /status, normalize: text}
       exists: {exists: true}
+  settlement:
+    service: settlement
+    url: /api/settlements/latest-by-claim
+    fields:
+      119.amount: {from: /119/amount, normalize: money}
+      120.amount: {from: /120/amount, normalize: money}
+  payment:
+    service: settlement
+    url: /api/payments/{id}
+    fields:
+      amount: {from: /amount, normalize: money}
+      status: {from: /status, normalize: text}
+      claim.119: {from: /claim/119, normalize: integer}
+      claim.120: {from: /claim/120, normalize: integer}
