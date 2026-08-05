@@ -9,6 +9,16 @@
 * `PolicyManager.getInstance()` becomes constructor-injected `@Service`.
 * JSP `FieldTag` semantic output becomes JSON, with money normalized to two decimal places.
 
+## Reporting module
+
+* `OpenReportAction` (`/report/openByAdjuster.do`) becomes `GET /api/reports/open-claims-by-adjuster` on the reporting service (8085).
+* `LossRatioReportAction` (`/report/lossRatio.do`) becomes `GET /api/reports/loss-ratio`.
+* `AgedClaimsReportAction` (`/report/agedClaims.do`) becomes `GET /api/reports/aged-claims`.
+* `ReportDAO` raw-map rows become typed DTO records (`OpenClaimsRow`, `LossRatioRow`, `AgedClaimsRow`); the aggregate SQL is carried over verbatim in `ReportRepository`, except the aged-claims as-of date, which moves from string concatenation to a bind parameter (observably identical).
+* JSP `FieldTag` integer rendering (`(long) Double.parseDouble`) becomes explicit truncation in `ReportApplicationService`; money rendering is normalized by the parity harness.
+* The fixed `report.asof.date` (2019-04-01) from `northstar.properties` becomes the `report.asof.date` Spring property with the same default.
+* Reports are read-only, so `/internal/reset` is intentionally idempotent, matching the policy service convention.
+
 ## Later extraction reference architecture
 
 The reserved settlement service (8083) should use `controller`, `dto`,

@@ -3,7 +3,7 @@ modules:
   intake: extracted
   settlement: pending
   workbench: pending
-  reporting: pending
+  reporting: extracted
 routes:
   "/claims/login.do":
     module: policy
@@ -53,6 +53,72 @@ routes:
     business_fields:
       - {field: claimId, from: /claimId, normalize: integer}
       - {field: claimStatus, from: /claimStatus, normalize: text}
+  "/claims/report/openByAdjuster.do":
+    module: reporting
+    service: reporting
+    method: GET
+    url: /api/reports/open-claims-by-adjuster
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - foreach:
+          from: /
+          item_key: adjuster
+          field: openCount_{adjuster}
+          value_from: /openCount
+          normalize: integer
+      - foreach:
+          from: /
+          item_key: adjuster
+          field: reserveTotal_{adjuster}
+          value_from: /reserveTotal
+          normalize: money
+  "/claims/report/lossRatio.do":
+    module: reporting
+    service: reporting
+    method: GET
+    url: /api/reports/loss-ratio
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - foreach:
+          from: /
+          item_key: lineOfBusiness
+          field: premiumTotal_{lineOfBusiness}
+          value_from: /premiumTotal
+          normalize: money
+      - foreach:
+          from: /
+          item_key: lineOfBusiness
+          field: lossTotal_{lineOfBusiness}
+          value_from: /lossTotal
+          normalize: money
+      - foreach:
+          from: /
+          item_key: lineOfBusiness
+          field: lossRatio_{lineOfBusiness}
+          value_from: /lossRatio
+          normalize: money
+  "/claims/report/agedClaims.do":
+    module: reporting
+    service: reporting
+    method: GET
+    url: /api/reports/aged-claims
+    status: {forward: 2, validation: 4, redirect: 3, error: 5}
+    validation_errors: /validationErrors
+    business_fields:
+      - foreach:
+          from: /
+          item_key: bucket
+          field: agedBucket_{bucket}
+          value_from: /claimCount
+          normalize: integer
+      - foreach:
+          from: /
+          item_key: bucket
+          field: agedReserve_{bucket}
+          value_from: /reserveTotal
+          normalize: integer
 probes:
   policy:
     service: policy
