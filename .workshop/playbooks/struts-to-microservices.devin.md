@@ -134,28 +134,31 @@ recorded legacy transcripts.
   the conversion that Struts did implicitly must become explicit in the new code
   or the behavior silently changes.
 
-### Worked example: the blank deductible divergence
+### Worked example: the money-rounding divergence
 
-A real defect this loop caught, and the canonical illustration of "the running
-legacy application is truth":
+A real divergence this loop caught, and the canonical illustration of "the
+running legacy application is truth". Note that it is caused by doing the
+**correct modern thing**:
 
-- In the legacy FNOL screen, the deductible field is optional. `ClaimForm`
-  declares it as a `String`, and Struts populates it via `BeanUtils`, which
-  converts an empty submission to **`0`**. The settlement calculator therefore
-  subtracts a zero deductible, and the claimant is paid the full covered amount.
-- The extracted service models the DTO field as a nullable `BigDecimal`, which is
-  the correct modern design. A blank submission binds to `null`, and the
-  calculator skips the deduction — producing the *same* settlement on most
-  claims, so the happy-path tests and a code review both pass.
-- The divergence only appears where the legacy zero is load-bearing: transcripts
-  that combine a blank deductible with policy-limit capping settle at a different
-  amount, because the capping order differs once the deduction is skipped.
-- The parity report fails:
-  `settlement_blank_deductible | FAIL | settlement 4,750.00 != legacy 4,500.00`.
-- The fix is to reproduce the coercion explicitly — bind blank to zero at the DTO
-  boundary and note it as legacy-faithful — not to adjust the transcript. A
-  reviewer reading the new code would call the nullable field *better*. The
-  recorded behavior is what the business actually runs on.
+- Every Java reviewer knows not to use `double` for money. So the extracted
+  settlement calculator is written the right way — `BigDecimal` arithmetic,
+  `setScale(2, RoundingMode.HALF_UP)`. It is unambiguously better code than what
+  it replaced, and it passes review and its own unit tests.
+- The legacy `SettlementCalculator` computes in `double` and rounds with
+  `Math.round(amount * 100.0) / 100.0`.
+- The parity report fails on exactly one scenario:
+  `settlement_half_cent | FAIL | settlementAmount 1.01 != legacy 1.00`.
+- The cause: a covered amount of `1.005` is not exactly 1.005 in binary floating
+  point — it is a hair below — so `Math.round` returns `100` and the legacy
+  application has always paid `1.00`. `BigDecimal` reads the decimal string
+  exactly, rounds half up, and pays `1.01`.
+- The fix is to reproduce the legacy arithmetic explicitly, mark it
+  legacy-faithful, pin it with a unit test, and record it as a candidate for a
+  separate business decision — **not** to adjust the transcript.
+
+The lesson generalizes: the dangerous divergences in a legacy migration are not
+the mistakes, they are the improvements. A one-cent difference per settlement is
+invisible in review and very visible in a ledger reconciliation.
 
 ## Forbidden actions
 
