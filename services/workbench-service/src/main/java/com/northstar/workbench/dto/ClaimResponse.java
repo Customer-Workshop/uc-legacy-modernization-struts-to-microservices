@@ -30,7 +30,7 @@ public record ClaimResponse(
         c.getLossType(),
         c.getDescription(),
         c.getStatus(),
-        c.getReserveAmount().setScale(2).toPlainString(),
+        c.getReserveAmount().setScale(2, java.math.RoundingMode.HALF_UP).toPlainString(),
         c.getAssignedAdjuster(),
         c.getCreatedBy(),
         c.getCreatedDate().toString());

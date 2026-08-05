@@ -65,6 +65,27 @@ class WorkbenchApplicationServiceTest {
   }
 
   @Test
+  void reserveRendersTwoDecimalsWithHalfUpRounding() {
+    var claim =
+        new com.northstar.workbench.model.Claim(
+            121,
+            "CLM-00121",
+            9001,
+            "Claimant 121",
+            java.time.LocalDate.of(2019, 4, 1),
+            java.time.LocalDate.of(2019, 4, 1),
+            "WATER",
+            "desc",
+            "OPEN",
+            new BigDecimal("1234.5670"),
+            "adjuster1",
+            "supervisor",
+            java.time.LocalDate.of(2019, 4, 1));
+    assertThat(com.northstar.workbench.dto.ClaimResponse.from(claim).reserveAmount())
+        .isEqualTo("1234.57");
+  }
+
+  @Test
   void mutationsOnUnknownClaimsSucceedSilently() {
     assertThat(service.assign("999999", "adjuster1")).isNull();
     verify(repository).updateAdjuster(999999, "adjuster1");
