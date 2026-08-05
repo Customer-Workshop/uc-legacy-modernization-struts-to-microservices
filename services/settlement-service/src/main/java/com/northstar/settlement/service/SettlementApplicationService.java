@@ -1,6 +1,7 @@
 package com.northstar.settlement.service;
 
 import com.northstar.settlement.dto.SettlementRequest;
+import com.northstar.settlement.exception.NotFoundException;
 import com.northstar.settlement.model.Claim;
 import com.northstar.settlement.model.Policy;
 import com.northstar.settlement.model.Settlement;
@@ -56,11 +57,12 @@ public class SettlementApplicationService {
   @Transactional
   public Settlement save(SettlementRequest request, String user) {
     int claimId = LegacyCoercions.integer(request.claimId(), 119);
-    Claim claim = claims.findById(claimId).orElseThrow(() -> new IllegalStateException("claim"));
+    Claim claim =
+        claims.findById(claimId).orElseThrow(() -> new NotFoundException("claim.notFound"));
     Policy policy =
         policies
             .findById(claim.getPolicyId())
-            .orElseThrow(() -> new IllegalStateException("policy"));
+            .orElseThrow(() -> new NotFoundException("policy.notFound"));
     double covered = LegacyCoercions.decimal(request.coveredAmount(), 5000);
     double depreciation = LegacyCoercions.decimal(request.depreciation(), 0);
     String deductible = request.deductible();

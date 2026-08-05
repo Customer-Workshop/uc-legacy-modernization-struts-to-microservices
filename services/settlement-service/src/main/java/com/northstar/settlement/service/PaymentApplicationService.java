@@ -29,7 +29,7 @@ public class PaymentApplicationService {
     Settlement settlement =
         settlements
             .findFirstByClaimIdOrderBySettlementIdDesc(claimId)
-            .orElseThrow(() -> new IllegalStateException("settlement"));
+            .orElseThrow(() -> new NotFoundException("settlement.notFound"));
     Payment payment = new Payment();
     int paymentId = payments.nextId();
     payment.setPaymentId(paymentId);

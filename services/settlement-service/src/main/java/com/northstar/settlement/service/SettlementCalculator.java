@@ -11,11 +11,13 @@ public class SettlementCalculator {
   public Settlement calculate(
       double coveredAmount, String deductible, double depreciation, double policyLimit) {
     double deductibleValue = 0;
+    // legacy-faithful: a blank deductible is treated as zero, as the Struts form did.
     if (deductible != null && deductible.trim().length() > 0) {
       deductibleValue = Double.parseDouble(deductible);
     }
     double gross = coveredAmount - depreciation;
     double afterDeductible = gross - deductibleValue;
+    // legacy-faithful: a deductible larger than the loss floors the settlement at zero.
     if (afterDeductible < 0) {
       afterDeductible = 0;
     }
