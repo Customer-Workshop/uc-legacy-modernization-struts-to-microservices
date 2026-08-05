@@ -25,6 +25,8 @@ public class WorkbenchController {
     String adjuster = request == null ? null : request.adjuster();
     Claim claim = service.assign(claimId, adjuster);
     ClaimResponse view = ClaimResponse.from(claim);
+    // legacy-faithful: the JSP renders f_assignedAdjuster from the request attribute (the
+    // submitted/defaulted value), not the claim row, even when no claim was updated.
     return new AssignResponse(
         claimId, view == null ? adjusterOrDefault(adjuster) : view.assignedAdjuster(), view);
   }
@@ -34,6 +36,7 @@ public class WorkbenchController {
       @PathVariable String claimId, @RequestParam(required = false) String status) {
     Claim claim = service.changeStatus(claimId, status);
     ClaimResponse view = ClaimResponse.from(claim);
+    // legacy-faithful: f_claimStatus echoes the request attribute regardless of DB effect.
     return new StatusResponse(
         claimId, view == null ? statusOrDefault(status) : view.status(), view);
   }
@@ -44,6 +47,7 @@ public class WorkbenchController {
     double reserve =
         service.changeReserve(claimId, request == null ? null : request.reserveAmount());
     Claim claim = service.find(claimId);
+    // legacy-faithful: f_reserveAmount echoes the parsed request attribute, not the stored row.
     return new ReserveResponse(claimId, String.valueOf(reserve), ClaimResponse.from(claim));
   }
 
