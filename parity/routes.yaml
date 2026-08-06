@@ -1,3 +1,7 @@
+services:
+  policy: {port: 8081}
+  intake: {port: 8082}
+  settlement: {port: 8083}
 modules:
   policy: extracted
   intake: extracted

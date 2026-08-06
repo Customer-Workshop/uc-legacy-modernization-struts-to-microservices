@@ -11,9 +11,9 @@
 
 ## Later extraction reference architecture
 
-The reserved settlement service (8083) should use `controller`, `dto`,
-`service`, `repository`, `model`, `config`, and `exception` packages; constructor
-injection; `@ControllerAdvice`; Flyway `V1__schema.sql` and `V2__seed.sql`;
-and `/internal/reset` plus read endpoints for parity probes. Add its status and
-routes/probes to `parity/routes.yaml` only; no harness Python changes should be
-needed.
+Extracted services (including the settlement service on 8083) use `controller`,
+`dto`, `service`, `repository`, `model`, and `exception` packages; constructor
+injection; `@RestControllerAdvice`; Flyway `V1__schema.sql` and `V2__seed.sql`;
+and `/internal/reset` plus read endpoints for parity probes. Add a new module's
+service port, status, and routes/probes to `parity/routes.yaml` only; no
+harness Python changes should be needed.

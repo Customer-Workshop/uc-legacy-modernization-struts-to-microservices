@@ -13,7 +13,7 @@ up:
 down:
 	docker compose -p claims-$(NS) down
 parity:
-	python3 -m parity.replay --base-url-policy http://localhost:$(POLICY_PORT) --base-url-intake http://localhost:$(INTAKE_PORT) --base-url-settlement http://localhost:$(SETTLEMENT_PORT) $(if $(MODULE),--module $(MODULE),) $(if $(SCENARIO),--scenario $(SCENARIO),)
+	python3 -m parity.replay $(if $(MODULE),--module $(MODULE),) $(if $(SCENARIO),--scenario $(SCENARIO),)
 test:
 	cd services/policy-service && $(MVN) $(MAVEN_FLAGS) -q test
 	cd services/claims-intake-service && $(MVN) $(MAVEN_FLAGS) -q test

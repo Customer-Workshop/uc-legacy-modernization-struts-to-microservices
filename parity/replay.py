@@ -156,10 +156,13 @@ def run(args: argparse.Namespace) -> list[Result]:
         if (not args.module or entry["module"] == args.module)
         and (not args.scenario or entry["scenario"] == args.scenario)
     ]
+    port_offset = int(os.getenv("PORT_OFFSET", "0"))
+    services = cast(dict[str, dict[str, int]], spec["services"])
     bases = {
-        "policy": args.base_url_policy.rstrip("/"),
-        "intake": args.base_url_intake.rstrip("/"),
-        "settlement": args.base_url_settlement.rstrip("/"),
+        name: os.getenv(
+            f"BASE_URL_{name.upper()}", f"http://localhost:{int(cfg['port']) + port_offset}"
+        ).rstrip("/")
+        for name, cfg in services.items()
     }
     reset_services(spec, bases)
     modules = cast(dict[str, str], spec["modules"])
@@ -271,11 +274,6 @@ def write_report(results: list[Result], summary: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url-policy", default=os.getenv("BASE_URL_POLICY", "http://localhost:8081"))
-    parser.add_argument("--base-url-intake", default=os.getenv("BASE_URL_INTAKE", "http://localhost:8082"))
-    parser.add_argument(
-        "--base-url-settlement", default=os.getenv("BASE_URL_SETTLEMENT", "http://localhost:8083")
-    )
     parser.add_argument("--module")
     parser.add_argument("--scenario")
     args = parser.parse_args()

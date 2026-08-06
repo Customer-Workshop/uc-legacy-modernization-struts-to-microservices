@@ -1,8 +1,7 @@
 # Struts to microservices: before state
 
-This repository is the checkpoint before extracting the settlement module. It
-contains policy and FNOL services plus a parity gate over immutable legacy
-transcripts.
+This repository contains the policy, FNOL, and settlement services plus a
+parity gate over immutable legacy transcripts.
 
 ```sh
 make up NS=dev
@@ -11,7 +10,7 @@ make parity NS=dev
 
 | Area | Location |
 |---|---|
-| Extracted services | `services/policy-service`, `services/claims-intake-service` |
+| Extracted services | `services/policy-service`, `services/claims-intake-service`, `services/settlement-service` |
 | Golden transcripts | `transcripts/` |
 | Replay harness | `parity/` |
 | Mapping and quirks | `docs/` |
