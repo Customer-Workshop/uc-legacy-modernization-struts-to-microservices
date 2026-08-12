@@ -21,6 +21,12 @@
 * `SettlementCalculator.getInstance()` singleton becomes the static, side-effect-free `service/SettlementCalculator` with the double arithmetic preserved value-for-value.
 * `SettlementDAO`/`PaymentDAO` JDBC (including `nextId` max+1 key generation) become Spring Data repositories with `coalesce(max(id),0)+1` queries; every legacy statement was already parameterized except `nextId`'s concatenated table name, which is now a fixed JPQL query.
 * JSP money rendering (`FieldTag type="money"`, `String.format("%.2f")`) becomes `LegacyMoney.format`.
+* The service keeps a local Flyway-seeded read model of `claim`/`policy` (id and
+  policy limit only) for limit lookups. Claims created through
+  claims-intake-service after seeding (ids 121+) are not synchronized into it,
+  so they cannot yet be settled; wiring a claim/policy sync or service-to-service
+  lookup is deferred to the workbench/reporting extractions, which own the
+  cross-module claim lifecycle.
 
 ## Later extraction reference architecture
 
