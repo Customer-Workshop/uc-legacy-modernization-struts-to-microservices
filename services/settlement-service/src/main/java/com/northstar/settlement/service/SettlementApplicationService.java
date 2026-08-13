@@ -108,7 +108,7 @@ public class SettlementApplicationService {
   public void reset() {
     payments.deleteAllInBatch();
     settlements.deleteAllInBatch();
-    new ResourceDatabasePopulator(new ClassPathResource("db/reset-settlements.sql"))
+    new ResourceDatabasePopulator(new ClassPathResource("db/migration/V2__seed.sql"))
         .execute(dataSource);
   }
 
