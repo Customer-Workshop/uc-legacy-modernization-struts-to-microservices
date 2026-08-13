@@ -20,10 +20,10 @@ class HtmlReportTest(unittest.TestCase):
 
     def test_pending_module_and_totals_are_visible(self) -> None:
         self.assertIn(">pending<", self.output)
-        self.assertIn("<strong>2</strong><span>PASS</span>", self.output)
+        self.assertIn("<strong>8</strong><span>PASS</span>", self.output)
         self.assertIn("<strong>1</strong><span>FAIL</span>", self.output)
-        self.assertIn("<strong>1</strong><span>SKIP</span>", self.output)
-        self.assertIn("<strong>4</strong><span>TOTAL SCENARIOS</span>", self.output)
+        self.assertIn("<strong>4</strong><span>SKIP</span>", self.output)
+        self.assertIn("<strong>13</strong><span>TOTAL SCENARIOS</span>", self.output)
 
     def test_no_external_assets_and_all_modules_appear(self) -> None:
         self.assertNotRegex(self.output, r"https?://")

@@ -12,10 +12,52 @@
       "scenario": "settlement_half_cent",
       "module": "settlement",
       "status": "FAIL",
-      "message": "settlement_half_cent | settlementAmount 1.01 != legacy 1.00"
+      "message": "settlementAmount 1.01 != legacy 1.00"
+    },
+    {
+      "scenario": "login",
+      "module": "policy",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "policy_search",
+      "module": "policy",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "policy_view",
+      "module": "policy",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "fnol_submit",
+      "module": "intake",
+      "status": "PASS",
+      "message": ""
     },
     {
       "scenario": "settlement_calculate",
+      "module": "settlement",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "settlement_save",
+      "module": "settlement",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "payment_issue",
+      "module": "settlement",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "payment_history",
       "module": "settlement",
       "status": "PASS",
       "message": ""
@@ -27,15 +69,27 @@
       "message": ""
     },
     {
-      "scenario": "settlement_save",
-      "module": "settlement",
-      "status": "PASS",
+      "scenario": "workbench_status",
+      "module": "workbench",
+      "status": "SKIP (not yet extracted)",
+      "message": ""
+    },
+    {
+      "scenario": "report_open_by_adjuster",
+      "module": "reporting",
+      "status": "SKIP (not yet extracted)",
+      "message": ""
+    },
+    {
+      "scenario": "report_loss_ratio",
+      "module": "reporting",
+      "status": "SKIP (not yet extracted)",
       "message": ""
     }
   ],
   "summary": {
-    "PASS": 2,
+    "PASS": 8,
     "FAIL": 1,
-    "SKIP": 1
+    "SKIP": 4
   }
 }
