@@ -111,24 +111,33 @@ def reset_services(spec: dict[str, object], bases: dict[str, str]) -> None:
             raise RuntimeError(f"reset failed for {service}: HTTP {status}")
 
 
+def resolve_probe(probes: dict[str, dict[str, object]], probe: str) -> tuple[str, list[str]]:
+    """Match the longest dotted probe name, leaving the identifier and field segments."""
+    parts = probe.split(".")
+    for size in range(len(parts) - 1, 0, -1):
+        name = ".".join(parts[:size])
+        if name in probes:
+            return name, parts[size:]
+    return "", []
+
+
 def check_probes(
     spec: dict[str, object], expected: dict[str, str], bases: dict[str, str]
 ) -> str:
     probes = cast(dict[str, dict[str, object]], spec.get("probes", {}))
     for probe, wanted in expected.items():
-        parts = probe.split(".")
-        prefix = parts[0]
-        if prefix not in probes:
+        name, segments = resolve_probe(probes, probe)
+        if not name:
             return f"probe {probe} has no declarative routes.yaml definition"
-        definition = probes[prefix]
-        if len(parts) < 3:
-            return f"probe {probe} is missing an identifier and field"
-        field_name = ".".join(parts[2:])
+        definition = probes[name]
+        if not segments:
+            return f"probe {probe} is missing an identifier"
+        field_name = ".".join(segments[1:]) or "value"
         fields = cast(dict[str, dict[str, object]], definition.get("fields", {}))
         if field_name not in fields:
             return f"probe {probe} has no declarative field mapping"
         field = fields[field_name]
-        target = str(definition["url"]).replace("{id}", parts[1])
+        target = str(definition["url"]).replace("{id}", segments[0])
         try:
             status, data = request(bases[str(definition["service"])], "GET", target)
         except (urllib.error.URLError, TimeoutError) as error:
@@ -137,6 +146,12 @@ def check_probes(
             actual = "true" if status == 200 else "false" if status == 404 else f"HTTP {status}"
         elif status // 100 != 2:
             return f"probe {probe} returned HTTP {status}"
+        elif field.get("count"):
+            try:
+                items = cast(list[object], pointer(data, str(field.get("from", "/"))))
+                actual = str(len(items))
+            except (KeyError, IndexError, TypeError, ValueError) as error:
+                return f"probe {probe} extraction failed: {error}"
         else:
             try:
                 actual = normalize(pointer(data, str(field["from"])), str(field["normalize"]))
@@ -159,6 +174,7 @@ def run(args: argparse.Namespace) -> list[Result]:
     bases = {
         "policy": args.base_url_policy.rstrip("/"),
         "intake": args.base_url_intake.rstrip("/"),
+        "settlement": args.base_url_settlement.rstrip("/"),
     }
     reset_services(spec, bases)
     modules = cast(dict[str, str], spec["modules"])
@@ -272,6 +288,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url-policy", default=os.getenv("BASE_URL_POLICY", "http://localhost:8081"))
     parser.add_argument("--base-url-intake", default=os.getenv("BASE_URL_INTAKE", "http://localhost:8082"))
+    parser.add_argument(
+        "--base-url-settlement", default=os.getenv("BASE_URL_SETTLEMENT", "http://localhost:8083")
+    )
     parser.add_argument("--module")
     parser.add_argument("--scenario")
     args = parser.parse_args()
