@@ -8,11 +8,14 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import cast
 
 import yaml
+
+from parity import html_report
 
 ROOT = Path(__file__).parent.parent
 
@@ -22,6 +25,7 @@ class Result:
     scenario: str
     status: str
     message: str = ""
+    module: str = ""
 
 
 def request(base: str, method: str, path: str, body: dict[str, object] | None = None) -> tuple[int, object]:
@@ -184,7 +188,7 @@ def run(args: argparse.Namespace) -> list[Result]:
         scenario = entry["scenario"]
         module = entry["module"]
         if modules.get(module) != "extracted":
-            results.append(Result(scenario, "SKIP (not yet extracted)"))
+            results.append(Result(scenario, "SKIP (not yet extracted)", module=module))
             continue
         transcript = cast(
             dict[str, object],
@@ -194,7 +198,12 @@ def run(args: argparse.Namespace) -> list[Result]:
         route_path, query = parse_path(str(request_data["path"]))
         if route_path not in routes:
             results.append(
-                Result(scenario, "FAIL", f"route {route_path} has no declarative routes.yaml definition")
+                Result(
+                    scenario,
+                    "FAIL",
+                    f"route {route_path} has no declarative routes.yaml definition",
+                    module=module,
+                )
             )
             continue
         route = routes[route_path]
@@ -217,14 +226,19 @@ def run(args: argparse.Namespace) -> list[Result]:
                 bases[str(route["service"])], str(route["method"]), target, body or None
             )
         except (urllib.error.URLError, TimeoutError) as error:
-            results.append(Result(scenario, "FAIL", f"request failed: {error}"))
+            results.append(Result(scenario, "FAIL", f"request failed: {error}", module=module))
             continue
         expected = cast(dict[str, object], transcript["expected"])
         try:
             expected_class = expected_status_class(route, expected)
             if actual_status // 100 != expected_class:
                 results.append(
-                    Result(scenario, "FAIL", f"status {actual_status} != expected {expected_class}xx")
+                    Result(
+                        scenario,
+                        "FAIL",
+                        f"status {actual_status} != expected {expected_class}xx",
+                        module=module,
+                    )
                 )
                 continue
             try:
@@ -238,6 +252,7 @@ def run(args: argparse.Namespace) -> list[Result]:
                         scenario,
                         "FAIL",
                         f"validation errors {actual_errors} != legacy {expected_errors}",
+                        module=module,
                     )
                 )
                 continue
@@ -253,18 +268,38 @@ def run(args: argparse.Namespace) -> list[Result]:
                     None,
                 )
                 if mismatch:
-                    results.append(Result(scenario, "FAIL", mismatch))
+                    results.append(Result(scenario, "FAIL", mismatch, module=module))
                     continue
             probe_error = check_probes(spec, cast(dict[str, str], expected["db_state"]), bases)
         except (KeyError, IndexError, TypeError, ValueError) as error:
             probe_error = f"declarative extraction failed: {error}"
-        results.append(Result(scenario, "FAIL", probe_error) if probe_error else Result(scenario, "PASS"))
+        results.append(
+            Result(scenario, "FAIL", probe_error, module=module)
+            if probe_error
+            else Result(scenario, "PASS", module=module)
+        )
     return results
 
 
 def write_report(results: list[Result], summary: str) -> None:
+    modules = cast(
+        dict[str, str],
+        yaml.safe_load((ROOT / "parity/routes.yaml").read_text())["modules"],
+    )
     report = {
-        "results": [result.__dict__ for result in results],
+        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+            "+00:00", "Z"
+        ),
+        "modules": modules,
+        "results": [
+            {
+                "scenario": result.scenario,
+                "module": result.module,
+                "status": result.status,
+                "message": result.message,
+            }
+            for result in results
+        ],
         "summary": {
             status: sum(
                 result.status == status
@@ -276,6 +311,7 @@ def write_report(results: list[Result], summary: str) -> None:
         },
     }
     (ROOT / "parity/report.json").write_text(json.dumps(report, indent=2) + "\n")
+    html_report.write(report, ROOT / "parity/report.html")
     rows = "\n".join(
         f"| {result.scenario} | {result.status} | {result.message} |" for result in results
     )

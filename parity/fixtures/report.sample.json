@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-08-13T09:00:00Z",
+  "modules": {
+    "policy": "extracted",
+    "intake": "extracted",
+    "settlement": "extracted",
+    "workbench": "pending",
+    "reporting": "pending"
+  },
+  "results": [
+    {
+      "scenario": "settlement_half_cent",
+      "module": "settlement",
+      "status": "FAIL",
+      "message": "settlement_half_cent | settlementAmount 1.01 != legacy 1.00"
+    },
+    {
+      "scenario": "settlement_calculate",
+      "module": "settlement",
+      "status": "PASS",
+      "message": ""
+    },
+    {
+      "scenario": "workbench_assign",
+      "module": "workbench",
+      "status": "SKIP (not yet extracted)",
+      "message": ""
+    },
+    {
+      "scenario": "settlement_save",
+      "module": "settlement",
+      "status": "PASS",
+      "message": ""
+    }
+  ],
+  "summary": {
+    "PASS": 2,
+    "FAIL": 1,
+    "SKIP": 1
+  }
+}
