@@ -8,13 +8,17 @@ import com.northstar.settlement.model.Payment;
 import com.northstar.settlement.model.Settlement;
 import com.northstar.settlement.repository.PaymentRepository;
 import com.northstar.settlement.repository.SettlementRepository;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,13 +40,19 @@ public class SettlementApplicationService {
       SettlementCalculator calculator,
       DataSource dataSource,
       @Value("${settlement.intake-base-url}") String intakeUrl,
-      @Value("${settlement.policy-base-url}") String policyUrl) {
+      @Value("${settlement.policy-base-url}") String policyUrl,
+      @Value("${settlement.http.connect-timeout}") Duration connectTimeout,
+      @Value("${settlement.http.read-timeout}") Duration readTimeout) {
     this.settlements = settlements;
     this.payments = payments;
     this.calculator = calculator;
     this.dataSource = dataSource;
-    this.intake = RestClient.builder().baseUrl(intakeUrl).build();
-    this.policy = RestClient.builder().baseUrl(policyUrl).build();
+    ClientHttpRequestFactorySettings settings =
+        ClientHttpRequestFactorySettings.defaults().withTimeouts(connectTimeout, readTimeout);
+    ClientHttpRequestFactory requestFactory =
+        ClientHttpRequestFactoryBuilder.detect().build(settings);
+    this.intake = RestClient.builder().baseUrl(intakeUrl).requestFactory(requestFactory).build();
+    this.policy = RestClient.builder().baseUrl(policyUrl).requestFactory(requestFactory).build();
   }
 
   public Settlement calculate(SettlementRequest r) {

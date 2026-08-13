@@ -13,6 +13,7 @@ import com.northstar.settlement.repository.PaymentRepository;
 import com.northstar.settlement.repository.SettlementRepository;
 import com.northstar.settlement.service.SettlementApplicationService;
 import com.northstar.settlement.service.SettlementCalculator;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Optional;
 import javax.sql.DataSource;
@@ -26,7 +27,9 @@ class SettlementApplicationServiceTest {
           new SettlementCalculator(),
           mock(DataSource.class),
           "http://localhost:8082",
-          "http://localhost:8081");
+          "http://localhost:8081",
+          Duration.ofSeconds(2),
+          Duration.ofSeconds(5));
 
   @Test
   void integerFallbackMatchesLegacyCoercion() {
@@ -53,7 +56,9 @@ class SettlementApplicationServiceTest {
             new SettlementCalculator(),
             mock(DataSource.class),
             "http://localhost:8082",
-            "http://localhost:8081");
+            "http://localhost:8081",
+            Duration.ofSeconds(2),
+            Duration.ofSeconds(5));
     Settlement seeded =
         new Settlement(120, 119, 5000, 500, 0, 4500, false, "supervisor", LocalDate.of(2019, 4, 1));
     when(settlements.findFirstByClaimIdOrderBySettlementIdDesc(119))
