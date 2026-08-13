@@ -8,7 +8,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import cast
 
@@ -22,6 +23,7 @@ class Result:
     scenario: str
     status: str
     message: str = ""
+    module: str = ""
 
 
 def request(base: str, method: str, path: str, body: dict[str, object] | None = None) -> tuple[int, object]:
@@ -168,7 +170,7 @@ def run(args: argparse.Namespace) -> list[Result]:
         scenario = entry["scenario"]
         module = entry["module"]
         if modules.get(module) != "extracted":
-            results.append(Result(scenario, "SKIP (not yet extracted)"))
+            results.append(Result(scenario, "SKIP (not yet extracted)", module=module))
             continue
         transcript = cast(
             dict[str, object],
@@ -178,7 +180,7 @@ def run(args: argparse.Namespace) -> list[Result]:
         route_path, query = parse_path(str(request_data["path"]))
         if route_path not in routes:
             results.append(
-                Result(scenario, "FAIL", f"route {route_path} has no declarative routes.yaml definition")
+                Result(scenario, "FAIL", f"route {route_path} has no declarative routes.yaml definition", module)
             )
             continue
         route = routes[route_path]
@@ -201,14 +203,14 @@ def run(args: argparse.Namespace) -> list[Result]:
                 bases[str(route["service"])], str(route["method"]), target, body or None
             )
         except (urllib.error.URLError, TimeoutError) as error:
-            results.append(Result(scenario, "FAIL", f"request failed: {error}"))
+            results.append(Result(scenario, "FAIL", f"request failed: {error}", module))
             continue
         expected = cast(dict[str, object], transcript["expected"])
         try:
             expected_class = expected_status_class(route, expected)
             if actual_status // 100 != expected_class:
                 results.append(
-                    Result(scenario, "FAIL", f"status {actual_status} != expected {expected_class}xx")
+                    Result(scenario, "FAIL", f"status {actual_status} != expected {expected_class}xx", module)
                 )
                 continue
             try:
@@ -222,6 +224,7 @@ def run(args: argparse.Namespace) -> list[Result]:
                         scenario,
                         "FAIL",
                         f"validation errors {actual_errors} != legacy {expected_errors}",
+                        module,
                     )
                 )
                 continue
@@ -237,34 +240,58 @@ def run(args: argparse.Namespace) -> list[Result]:
                     None,
                 )
                 if mismatch:
-                    results.append(Result(scenario, "FAIL", mismatch))
+                    results.append(Result(scenario, "FAIL", mismatch, module))
                     continue
             probe_error = check_probes(spec, cast(dict[str, str], expected["db_state"]), bases)
         except (KeyError, IndexError, TypeError, ValueError) as error:
             probe_error = f"declarative extraction failed: {error}"
-        results.append(Result(scenario, "FAIL", probe_error) if probe_error else Result(scenario, "PASS"))
+        results.append(
+            Result(scenario, "FAIL", probe_error, module) if probe_error else Result(scenario, "PASS", module=module)
+        )
     return results
 
 
+def format_message(message: str) -> str:
+    return message.replace("|", "\\|") if message else "—"
+
+
+def status_group(result: Result) -> int:
+    if result.status == "FAIL":
+        return 0
+    if result.status.startswith("SKIP"):
+        return 1
+    return 2
+
+
 def write_report(results: list[Result], summary: str) -> None:
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    counts = {
+        status: sum(
+            result.status == status
+            if status != "SKIP"
+            else result.status.startswith("SKIP")
+            for result in results
+        )
+        for status in ("PASS", "FAIL", "SKIP")
+    }
     report = {
+        "generated_at": generated_at,
         "results": [result.__dict__ for result in results],
-        "summary": {
-            status: sum(
-                result.status == status
-                if status != "SKIP"
-                else result.status.startswith("SKIP")
-                for result in results
-            )
-            for status in ("PASS", "FAIL", "SKIP")
-        },
+        "summary": counts,
     }
     (ROOT / "parity/report.json").write_text(json.dumps(report, indent=2) + "\n")
+    ordered = sorted(results, key=lambda result: (status_group(result), result.scenario))
     rows = "\n".join(
-        f"| {result.scenario} | {result.status} | {result.message} |" for result in results
+        f"| {result.scenario} | {result.module} | {result.status} | {format_message(result.message)} |"
+        for result in ordered
     )
     (ROOT / "parity/report.md").write_text(
-        f"# Parity report\n\n| Scenario | Status | Message |\n|---|---|---|\n{rows}\n\n{summary}\n"
+        f"# Parity report\n\n"
+        f"- **PASS:** {counts['PASS']}\n"
+        f"- **FAIL:** {counts['FAIL']}\n"
+        f"- **SKIP:** {counts['SKIP']}\n"
+        f"- **Generated:** {generated_at}\n\n"
+        f"| Scenario | Module | Status | Message |\n|---|---|---|---|\n{rows}\n\n{summary}\n"
     )
 
 
