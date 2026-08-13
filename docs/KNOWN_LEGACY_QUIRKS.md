@@ -11,3 +11,11 @@ These behaviors are intentionally preserved from the legacy source.
 * `FieldTag` renders money with two decimal places (`FieldTag.java:789-800`).
 * Empty policy line defaults to `AUTO` (`PolicySearchAction.java:20-23`).
 * Invalid policy IDs fall back to policy 1 (`PolicyViewAction.java:20-22`).
+* Settlement claim IDs default to 119 and covered/depreciation values default to 5000/0 on conversion failure (`SettlementCalculateAction.java:24-34`).
+* Settlement calculation treats blank deductible as zero (`SettlementCalculateAction.java:35-38`; `SettlementCalculator.java:27-30`).
+* Settlement arithmetic floors negative post-deductible values at zero and caps strictly above the policy limit (`SettlementCalculator.java:31-37`).
+* Settlement arithmetic uses binary-double `Math.round`, distinct from output formatting (`SettlementCalculator.java:37-38`; `FieldTag.java:789-800`).
+* Saved settlements use the session operator and fixed calculated date `2019-04-01` (`SettlementSaveAction.java:80-84`).
+* Settlement and payment IDs use max-plus-one allocation (`ClaimsActionSupport.java:61-72`).
+* Payment claim ID and amount use 119/latest-settlement fallbacks; checks use `CHK-<paymentId>`, with fixed issue date and `ISSUED` status (`PaymentIssueAction.java:115-128`).
+* Empty payment-history claim ID selects claim 119 (`PaymentHistoryAction.java:24-26`).
