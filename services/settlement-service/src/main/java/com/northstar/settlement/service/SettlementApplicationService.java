@@ -97,6 +97,7 @@ public class SettlementApplicationService {
   }
 
   public List<Payment> list(String claimId) {
+    // legacy-faithful: missing or blank claimId defaults to legacy claim 119.
     return payments.findByClaimIdOrderByPaymentIdAsc(integer(claimId, 119));
   }
 

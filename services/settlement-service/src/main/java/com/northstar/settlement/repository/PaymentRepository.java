@@ -9,7 +9,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
   @Query("select coalesce(max(p.paymentId),0)+1 from Payment p")
   int nextId();
 
-  List<Payment> findAllByOrderByPaymentIdAsc();
-
   List<Payment> findByClaimIdOrderByPaymentIdAsc(Integer claimId);
 }

@@ -17,7 +17,7 @@ response listed here.
 | POST | `/api/settlements` | same body, persists | the calculate fields plus `settlementId, savedBy` |
 | GET | `/api/settlements/claims/{claimId}` | — | `settlementAmount, cappedAtLimit` (latest settlement for the claim) |
 | POST | `/api/payments` | `claimId, amount, payeeName, paymentMethod` | `checkNumber, paymentAmount, paymentStatus` |
-| GET | `/api/payments` | optional `claimId` filter | array of `paymentId, checkNumber, paymentAmount, paymentStatus` |
+| GET | `/api/payments` | `claimId` filter; absent or blank defaults to legacy claim 119 | array of `paymentId, checkNumber, paymentAmount, paymentStatus` |
 | GET | `/api/payments/{paymentId}` | — | `paymentId, checkNumber, paymentAmount, paymentStatus` |
 | POST | `/internal/reset` | — | restores deterministic seed state |
 
